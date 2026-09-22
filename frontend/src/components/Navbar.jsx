@@ -68,7 +68,7 @@ function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
           <img
-            src="https://res.cloudinary.com/gufssbcd/image/upload/v1788566898/deltatrophies/logo.png"
+            src="/favicon-192.png"
             alt="Delta Industries"
             className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
           />

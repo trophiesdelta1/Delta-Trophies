@@ -27,7 +27,7 @@ function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-5">
               <img
-                src="https://res.cloudinary.com/gufssbcd/image/upload/v1788566898/deltatrophies/logo.png"
+                src="/favicon-192.png"
                 alt="Delta Industries"
                 className="h-10 w-auto"
               />
