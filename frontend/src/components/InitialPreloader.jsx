@@ -29,6 +29,7 @@ function InitialPreloader() {
       } catch {
         // The loader can still finish when browser storage is unavailable.
       }
+      window.dispatchEvent(new Event("delta:preloader-exit"));
     }, DISPLAY_TIME_MS);
     const removeTimer = window.setTimeout(
       () => setVisible(false),

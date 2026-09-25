@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import getWithRetry from "../api/getWithRetry";
+import HeroVideo from "../components/HeroVideo";
 import ProductCard from "../components/ProductCard";
 import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
 import { CONTACT } from "../config/contact";
@@ -80,28 +81,8 @@ function Home() {
         <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-gold/10 rounded-full blur-[150px] pointer-events-none z-10" />
         <div className="absolute bottom-1/4 right-10 w-[300px] h-[300px] bg-white/5 rounded-full blur-[120px] pointer-events-none z-10" />
 
-        {/* Hero background video */}
-        <div className="absolute inset-0 z-0">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            poster="https://res.cloudinary.com/gufssbcd/video/upload/so_0,f_jpg,q_auto:best,w_1920/deltatrophies/hero/hero-video.jpg"
-            className="w-full h-full object-cover"
-          >
-            <source
-              src="https://res.cloudinary.com/gufssbcd/video/upload/q_auto:best/deltatrophies/hero/hero-video.mp4"
-              type="video/mp4"
-            />
-            <source
-              src="https://res.cloudinary.com/gufssbcd/video/upload/q_auto:best,f_webm/deltatrophies/hero/hero-video.webm"
-              type="video/webm"
-            />
-          </video>
-          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-        </div>
+        {/* Sequential Cloudinary-optimized hero videos */}
+        <HeroVideo />
         {/* Big Background Typography */}
         <div className="absolute right-[-2%] bottom-[12%] select-none pointer-events-none hidden lg:block z-0">
           <h2
