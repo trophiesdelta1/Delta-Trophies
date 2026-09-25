@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const PRELOADER_SESSION_KEY = "delta-preloader-shown";
 const DISPLAY_TIME_MS = 2400;
-const FADE_TIME_MS = 400;
+const EXIT_TIME_MS = 850;
 
 function shouldShowPreloader() {
   try {
@@ -32,7 +32,7 @@ function InitialPreloader() {
     }, DISPLAY_TIME_MS);
     const removeTimer = window.setTimeout(
       () => setVisible(false),
-      DISPLAY_TIME_MS + FADE_TIME_MS,
+      DISPLAY_TIME_MS + EXIT_TIME_MS,
     );
 
     return () => {
