@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import API from "../api/axios";
+import getWithRetry from "../api/getWithRetry";
 import ProductCard from "../components/ProductCard";
 import FilterSidebar from "../components/FilterSidebar";
 import { SITE_NAME } from "../config/seo";
@@ -42,6 +43,8 @@ function Shop() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [wakingCatalogue, setWakingCatalogue] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [pagination, setPagination] = useState({ page: 1, pages: 0, total: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -66,7 +69,9 @@ function Shop() {
     const controller = new AbortController();
     const fetchCategories = async () => {
       try {
-        const res = await API.get("/categories", { signal: controller.signal });
+        const res = await getWithRetry("/categories", {
+          signal: controller.signal,
+        });
         setCategories(res.data.categories);
       } catch (error) {
         if (error.code !== "ERR_CANCELED") console.error(error);
@@ -74,7 +79,7 @@ function Shop() {
     };
     void fetchCategories();
     return () => controller.abort();
-  }, []);
+  }, [retryKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,14 +89,16 @@ function Shop() {
       setLoading(true);
       setLoadingMore(false);
       setLoadError("");
+      setWakingCatalogue(false);
       try {
         const params = { page: 1, limit: pageSizeFor(selectedCategory) };
         if (selectedCategory !== "all") params.category = selectedCategory;
         if (debouncedSearch) params.search = debouncedSearch;
-        const res = await API.get("/products", {
-          params,
-          signal: controller.signal,
-        });
+        const res = await getWithRetry(
+          "/products",
+          { params, signal: controller.signal },
+          { onRetry: () => setWakingCatalogue(true) },
+        );
         if (requestVersion !== productRequestVersion.current) return;
         setProducts(res.data.products);
         setPagination(res.data.pagination);
@@ -103,7 +110,7 @@ function Shop() {
           console.error(error);
           setProducts([]);
           setPagination({ page: 1, pages: 0, total: 0 });
-          setLoadError("Unable to load products. Please try again.");
+          setLoadError("The catalogue could not connect. Please try again.");
         }
       } finally {
         if (
@@ -111,12 +118,13 @@ function Shop() {
           requestVersion === productRequestVersion.current
         ) {
           setLoading(false);
+          setWakingCatalogue(false);
         }
       }
     };
     void fetchProducts();
     return () => controller.abort();
-  }, [selectedCategory, debouncedSearch]);
+  }, [selectedCategory, debouncedSearch, retryKey]);
 
   const handleShowMore = async () => {
     if (loadingMore || pagination.page >= pagination.pages) return;
@@ -302,7 +310,9 @@ function Shop() {
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <p className="text-white/30 tracking-widest uppercase text-sm">
-                  Loading...
+                  {wakingCatalogue
+                    ? "Preparing the catalogue..."
+                    : "Loading..."}
                 </p>
               </div>
             ) : loadError && products.length === 0 ? (
@@ -312,7 +322,7 @@ function Shop() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
+                  onClick={() => setRetryKey((current) => current + 1)}
                   className="border border-gold/30 px-5 py-2 text-gold text-xs tracking-widest uppercase hover:border-gold transition-colors"
                 >
                   Try Again

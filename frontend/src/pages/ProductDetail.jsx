@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import API from "../api/axios";
+import getWithRetry from "../api/getWithRetry";
 import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
 import { jsonLd, productPath, SITE_NAME, SITE_URL } from "../config/seo";
 import ProductCard from "../components/ProductCard";
@@ -45,7 +46,7 @@ function ProductDetail() {
       setSubmitted(false);
       setSubmitError("");
       try {
-        const res = await API.get(`/products/${id}`, {
+        const res = await getWithRetry(`/products/${id}`, {
           signal: controller.signal,
         });
         setProduct(res.data.product);
@@ -73,7 +74,7 @@ function ProductDetail() {
     const controller = new AbortController();
     const fetchRelated = async () => {
       try {
-        const response = await API.get("/products", {
+        const response = await getWithRetry("/products", {
           params: { category: product.category_slug, page: 1, limit: 5 },
           signal: controller.signal,
         });

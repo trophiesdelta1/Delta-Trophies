@@ -4,3 +4,111 @@
 body {
   background-color: #0a0a0a;
 }
+
+.initial-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #080808;
+  opacity: 1;
+  transition: opacity 400ms ease, visibility 400ms ease;
+}
+
+.initial-preloader--leaving {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.initial-preloader__content {
+  display: flex;
+  width: min(82vw, 360px);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.initial-preloader__mark {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 22px rgb(212 175 55 / 16%));
+  animation: preloader-mark-in 700ms ease-out both;
+}
+
+.initial-preloader__name {
+  margin-top: 18px;
+  color: #f4f0e6;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: preloader-copy-in 700ms 120ms ease-out both;
+}
+
+.initial-preloader__line {
+  width: 180px;
+  height: 1px;
+  margin-top: 18px;
+  overflow: hidden;
+  background: rgb(212 175 55 / 18%);
+}
+
+.initial-preloader__line span {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  animation: preloader-line 1.25s ease-in-out infinite;
+}
+
+.initial-preloader__caption {
+  margin-top: 14px;
+  color: rgb(255 255 255 / 38%);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  animation: preloader-copy-in 700ms 220ms ease-out both;
+}
+
+@keyframes preloader-mark-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes preloader-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes preloader-line {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .initial-preloader__mark,
+  .initial-preloader__name,
+  .initial-preloader__caption,
+  .initial-preloader__line span {
+    animation: none;
+  }
+}

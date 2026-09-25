@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import API from "../api/axios";
+import getWithRetry from "../api/getWithRetry";
 import ProductCard from "../components/ProductCard";
 import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
 import { CONTACT } from "../config/contact";
@@ -49,8 +49,8 @@ function Home() {
     const fetchData = async () => {
       try {
         const [catRes, prodRes] = await Promise.all([
-          API.get("/categories", { signal: controller.signal }),
-          API.get("/products", {
+          getWithRetry("/categories", { signal: controller.signal }),
+          getWithRetry("/products", {
             params: { page: 1, limit: 6 },
             signal: controller.signal,
           }),
