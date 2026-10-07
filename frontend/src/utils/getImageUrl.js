@@ -10,9 +10,13 @@ const getImageUrl = (path) => {
   return `${apiOrigin}${normalizedPath}`;
 };
 
-export const getOptimizedImageUrl = (
+const WATERMARK_TRANSFORMATION =
+  'l_text:Arial_48_bold:Delta%20Trophies,co_rgb:8B6A22/c_scale,fl_relative,w_0.5/o_30/fl_layer_apply,g_center';
+
+const getCloudinaryImageUrl = (
   path,
   { width, height, quality = 'auto:best' } = {},
+  watermark = false,
 ) => {
   const originalUrl = getImageUrl(path);
   if (!originalUrl || !/^https:\/\/res\.cloudinary\.com\//i.test(originalUrl)) {
@@ -33,7 +37,16 @@ export const getOptimizedImageUrl = (
     .filter(Boolean)
     .join(',');
 
-  return originalUrl.replace(uploadMarker, `${uploadMarker}${transformation}/`);
+  return originalUrl.replace(
+    uploadMarker,
+    `${uploadMarker}${transformation}/${watermark ? `${WATERMARK_TRANSFORMATION}/` : ''}`,
+  );
 };
+
+export const getOptimizedImageUrl = (path, options) =>
+  getCloudinaryImageUrl(path, options);
+
+export const getWatermarkedImageUrl = (path, options) =>
+  getCloudinaryImageUrl(path, options, true);
 
 export default getImageUrl;

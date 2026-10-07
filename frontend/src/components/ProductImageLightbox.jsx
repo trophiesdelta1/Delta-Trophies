@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import getImageUrl from "../utils/getImageUrl";
+import { getWatermarkedImageUrl } from "../utils/getImageUrl";
 import ProtectedImage from "./ProtectedImage";
 
 function ProductImageLightbox({ image, alt, name, onClose }) {
@@ -61,7 +61,7 @@ function ProductImageLightbox({ image, alt, name, onClose }) {
       <div className="flex w-full max-w-[1100px] flex-col items-center gap-3">
         <div className="flex max-w-full items-center justify-center border border-gold/30 bg-white p-3 shadow-2xl shadow-black/50 sm:p-5">
           <ProtectedImage
-            src={getImageUrl(image)}
+            src={getWatermarkedImageUrl(image, { width: 3000, height: 3000 })}
             alt={alt}
             className="block h-auto max-h-[min(74dvh,820px)] w-auto max-w-[84vw] object-contain"
             decoding="async"

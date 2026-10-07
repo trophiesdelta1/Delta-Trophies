@@ -9,7 +9,7 @@ import {
 import HeroVideo from "../components/HeroVideo";
 import ProductCard from "../components/ProductCard";
 import ReviewCarousel from "../components/ReviewCarousel";
-import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
+import getImageUrl, { getWatermarkedImageUrl } from "../utils/getImageUrl";
 import { CONTACT } from "../config/contact";
 import { SITE_NAME, SITE_URL } from "../config/seo";
 import SeoHead from "../components/SeoHead";
@@ -215,7 +215,7 @@ function Home() {
                   {/* Photo area */}
                   <div className="flex-1 flex items-center justify-center overflow-hidden">
                     <ProtectedImage
-                      src={getOptimizedImageUrl(category.thumbnail, {
+                      src={getWatermarkedImageUrl(category.thumbnail, {
                         width: 700,
                         height: 700,
                       })}

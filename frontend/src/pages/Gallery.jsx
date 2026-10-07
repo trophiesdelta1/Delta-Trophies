@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import SeoHead from "../components/SeoHead";
 import ProtectedImage from "../components/ProtectedImage";
+import { getWatermarkedImageUrl } from "../utils/getImageUrl";
 
 const factoryImages = [
   "https://res.cloudinary.com/gufssbcd/image/upload/v1788566868/deltatrophies/gallery/factory/AA%20Welcome.jpg",
@@ -79,7 +80,7 @@ function Gallery() {
           onClick={() => setSelectedImage(null)}
         >
           <ProtectedImage
-            src={selectedImage}
+            src={getWatermarkedImageUrl(selectedImage, { width: 3000, height: 3000 })}
             alt="Gallery"
             className="max-w-4xl max-h-screen object-contain"
           />
@@ -140,7 +141,7 @@ function Gallery() {
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
                 <ProtectedImage
-                  src={img}
+                  src={getWatermarkedImageUrl(img, { width: 800, height: 800 })}
                   alt={`Factory ${index + 1}`}
                   loading="lazy"
                   decoding="async"
@@ -171,7 +172,7 @@ function Gallery() {
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
                 <ProtectedImage
-                  src={img}
+                  src={getWatermarkedImageUrl(img, { width: 800, height: 800 })}
                   alt={`Annual Meet ${index + 1}`}
                   loading="lazy"
                   decoding="async"
@@ -202,7 +203,7 @@ function Gallery() {
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
                 <ProtectedImage
-                  src={img}
+                  src={getWatermarkedImageUrl(img, { width: 800, height: 800 })}
                   alt={`Exhibition ${index + 1}`}
                   loading="lazy"
                   decoding="async"

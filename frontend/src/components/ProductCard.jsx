@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
+import getImageUrl, { getWatermarkedImageUrl } from "../utils/getImageUrl";
 import { productPath } from "../config/seo";
 import ProtectedImage from "./ProtectedImage";
 
 function ProductCard({ product, priority = false }) {
   const originalImage = getImageUrl(product.images?.[0]);
-  const cardImage = getOptimizedImageUrl(product.images?.[0], {
+  const cardImage = getWatermarkedImageUrl(product.images?.[0], {
     width: 700,
     height: 700,
   });

@@ -7,7 +7,7 @@ import {
   getCatalogueProducts,
   subscribeCatalogue,
 } from "../api/catalogue";
-import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
+import getImageUrl, { getWatermarkedImageUrl } from "../utils/getImageUrl";
 import { jsonLd, productPath, SITE_NAME, SITE_URL } from "../config/seo";
 import ProductCard from "../components/ProductCard";
 import ProductImageLightbox from "../components/ProductImageLightbox";
@@ -283,7 +283,7 @@ function ProductDetail() {
                 className="group relative mb-4 flex h-[420px] w-full cursor-zoom-in items-center justify-center border border-gold/20 bg-white transition-colors hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:h-[520px] lg:h-[600px]"
               >
                 <ProtectedImage
-                  src={getOptimizedImageUrl(product.images[selectedImage], {
+                  src={getWatermarkedImageUrl(product.images[selectedImage], {
                     width: 1600,
                     height: 1600,
                   })}
@@ -320,7 +320,7 @@ function ProductDetail() {
                     }`}
                   >
                     <ProtectedImage
-                      src={getOptimizedImageUrl(img, {
+                      src={getWatermarkedImageUrl(img, {
                         width: 200,
                         height: 200,
                       })}
