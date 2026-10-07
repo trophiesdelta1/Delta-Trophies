@@ -11,6 +11,12 @@ function App() {
   const warmupStarted = useRef(false);
 
   useEffect(() => {
+    const preventContextMenu = (event) => event.preventDefault();
+    document.addEventListener("contextmenu", preventContextMenu, true);
+    return () => document.removeEventListener("contextmenu", preventContextMenu, true);
+  }, []);
+
+  useEffect(() => {
     if (warmupStarted.current) return;
     warmupStarted.current = true;
 
