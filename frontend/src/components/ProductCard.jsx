@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
 import { productPath } from "../config/seo";
+import ProtectedImage from "./ProtectedImage";
 
 function ProductCard({ product, priority = false }) {
   const originalImage = getImageUrl(product.images?.[0]);
@@ -19,7 +20,7 @@ function ProductCard({ product, priority = false }) {
         style={{ height: "280px" }}
       >
         {product.images && product.images[0] ? (
-          <img
+          <ProtectedImage
             src={cardImage}
             alt={product.image_alt || product.name}
             width="700"

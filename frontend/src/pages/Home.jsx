@@ -13,6 +13,7 @@ import getImageUrl, { getOptimizedImageUrl } from "../utils/getImageUrl";
 import { CONTACT } from "../config/contact";
 import { SITE_NAME, SITE_URL } from "../config/seo";
 import SeoHead from "../components/SeoHead";
+import ProtectedImage from "../components/ProtectedImage";
 
 const homeTitle =
   "Custom Trophies & Awards Manufacturer in Jalandhar | Delta Industries";
@@ -213,7 +214,7 @@ function Home() {
                 >
                   {/* Photo area */}
                   <div className="flex-1 flex items-center justify-center overflow-hidden">
-                    <img
+                    <ProtectedImage
                       src={getOptimizedImageUrl(category.thumbnail, {
                         width: 700,
                         height: 700,

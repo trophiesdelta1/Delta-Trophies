@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import SeoHead from "../components/SeoHead";
+import ProtectedImage from "../components/ProtectedImage";
 
 const factoryImages = [
   "https://res.cloudinary.com/gufssbcd/image/upload/v1788566868/deltatrophies/gallery/factory/AA%20Welcome.jpg",
@@ -77,7 +78,7 @@ function Gallery() {
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center px-4"
           onClick={() => setSelectedImage(null)}
         >
-          <img
+          <ProtectedImage
             src={selectedImage}
             alt="Gallery"
             className="max-w-4xl max-h-screen object-contain"
@@ -138,7 +139,7 @@ function Gallery() {
                 onClick={() => setSelectedImage(img)}
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
-                <img
+                <ProtectedImage
                   src={img}
                   alt={`Factory ${index + 1}`}
                   loading="lazy"
@@ -169,7 +170,7 @@ function Gallery() {
                 onClick={() => setSelectedImage(img)}
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
-                <img
+                <ProtectedImage
                   src={img}
                   alt={`Annual Meet ${index + 1}`}
                   loading="lazy"
@@ -200,7 +201,7 @@ function Gallery() {
                 onClick={() => setSelectedImage(img)}
                 className="break-inside-avoid cursor-pointer group relative overflow-hidden border border-gold/10 hover:border-gold transition-colors"
               >
-                <img
+                <ProtectedImage
                   src={img}
                   alt={`Exhibition ${index + 1}`}
                   loading="lazy"
