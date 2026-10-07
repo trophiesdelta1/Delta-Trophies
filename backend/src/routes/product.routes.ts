@@ -30,8 +30,15 @@ productRouter.post(
 productRouter.patch(
   '/:id',
   authenticate,
+  productImageUpload.array('images'),
   validateRequest(updateProductRequestSchema),
   updateProduct,
 );
-productRouter.put('/:id', authenticate, validateRequest(updateProductRequestSchema), updateProduct);
+productRouter.put(
+  '/:id',
+  authenticate,
+  productImageUpload.array('images'),
+  validateRequest(updateProductRequestSchema),
+  updateProduct,
+);
 productRouter.delete('/:id', authenticate, validateRequest(productIdRequestSchema), deleteProduct);

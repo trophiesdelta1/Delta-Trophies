@@ -4,7 +4,10 @@ import {
   deleteEntryRequestSchema,
   updateAssignmentRequestSchema,
 } from '../src/validation/inquiry.schemas.js';
-import { productListRequestSchema } from '../src/validation/product.schemas.js';
+import {
+  productListRequestSchema,
+  updateProductRequestSchema,
+} from '../src/validation/product.schemas.js';
 
 describe('request schemas', () => {
   it('normalizes catalogue pagination and booleans', () => {
@@ -15,6 +18,31 @@ describe('request schemas', () => {
     });
 
     expect(result.query).toEqual({ page: 2, limit: 25, in_stock: false });
+  });
+
+  it('accepts retained images in a multipart product edit and rejects malformed lists', () => {
+    const request = {
+      body: {
+        keep_images: JSON.stringify(['https://res.cloudinary.com/example/image/upload/old.jpg']),
+      },
+      params: { id: '507f1f77bcf86cd799439011' },
+      query: {},
+    };
+    expect(updateProductRequestSchema.parse(request).body.keep_images).toEqual([
+      'https://res.cloudinary.com/example/image/upload/old.jpg',
+    ]);
+    expect(
+      updateProductRequestSchema.safeParse({
+        ...request,
+        body: { keep_images: '["not-a-url"]' },
+      }).success,
+    ).toBe(false);
+    expect(
+      updateProductRequestSchema.safeParse({
+        ...request,
+        body: { keep_images: '{bad json' },
+      }).success,
+    ).toBe(false);
   });
 
   it('normalizes inquiry contact data', () => {

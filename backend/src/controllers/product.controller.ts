@@ -56,9 +56,10 @@ export const createProduct: RequestHandler = async (request, response) => {
   });
 };
 
-export const updateProduct: RequestHandler = async (_request, response) => {
+export const updateProduct: RequestHandler = async (request, response) => {
   const validated = response.locals.validated as UpdateProductRequest;
-  const product = await updateProductRecord(validated.params.id, validated.body);
+  const files = Array.isArray(request.files) ? request.files : [];
+  const product = await updateProductRecord(validated.params.id, validated.body, files);
   response.status(200).json({
     success: true,
     product,

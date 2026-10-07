@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../api/axios";
 import FilterSidebar from "../../components/FilterSidebar";
@@ -52,6 +52,10 @@ function ManageProducts() {
   const [deletingId, setDeletingId] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState(emptyForm);
+  const [keptEditImages, setKeptEditImages] = useState([]);
+  const [newEditImages, setNewEditImages] = useState([]);
+  const [newEditPreviews, setNewEditPreviews] = useState([]);
+  const editPreviewUrls = useRef([]);
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState("");
   const [error, setError] = useState("");
@@ -68,24 +72,34 @@ function ManageProducts() {
   }, [search]);
 
   useEffect(
-    () => () =>
-      previewUrls.current.forEach((preview) => URL.revokeObjectURL(preview)),
+    () => () => {
+      previewUrls.current.forEach((preview) => URL.revokeObjectURL(preview));
+      editPreviewUrls.current.forEach((preview) => URL.revokeObjectURL(preview));
+    },
     [],
   );
+
+  const closeEditModal = useCallback(() => {
+    editPreviewUrls.current.forEach((preview) => URL.revokeObjectURL(preview));
+    editPreviewUrls.current = [];
+    setNewEditImages([]);
+    setNewEditPreviews([]);
+    setEditingProduct(null);
+  }, []);
 
   useEffect(() => {
     if (!editingProduct) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const handleEscape = (event) => {
-      if (event.key === "Escape" && !updating) setEditingProduct(null);
+      if (event.key === "Escape" && !updating) closeEditModal();
     };
     window.addEventListener("keydown", handleEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [editingProduct, updating]);
+  }, [editingProduct, updating, closeEditModal]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -234,6 +248,11 @@ function ManageProducts() {
   };
 
   const openEditModal = (product, { clearName = false } = {}) => {
+    editPreviewUrls.current.forEach((preview) => URL.revokeObjectURL(preview));
+    editPreviewUrls.current = [];
+    setKeptEditImages(product.images ?? []);
+    setNewEditImages([]);
+    setNewEditPreviews([]);
     const skuModelGroup = product.sku?.split("-")[0]?.toUpperCase();
     const inferredModelGroup = SPECIAL_MODEL_GROUPS.some(
       (group) => group.code === skuModelGroup,
@@ -253,9 +272,36 @@ function ManageProducts() {
     setEditingProduct(product);
   };
 
+  const handleEditImageSelection = (event) => {
+    const selected = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (keptEditImages.length + newEditImages.length + selected.length > 10) {
+      setEditError("A product can have at most 10 images. Remove some before adding more.");
+      return;
+    }
+    const previews = selected.map((file) => URL.createObjectURL(file));
+    editPreviewUrls.current.push(...previews);
+    setNewEditImages((current) => [...current, ...selected]);
+    setNewEditPreviews((current) => [...current, ...previews]);
+    setEditError("");
+  };
+
+  const removeNewEditImage = (index) => {
+    URL.revokeObjectURL(newEditPreviews[index]);
+    editPreviewUrls.current = editPreviewUrls.current.filter(
+      (preview) => preview !== newEditPreviews[index],
+    );
+    setNewEditImages((current) => current.filter((_, position) => position !== index));
+    setNewEditPreviews((current) => current.filter((_, position) => position !== index));
+  };
+
   const handleUpdate = async (event) => {
     event.preventDefault();
     if (!editingProduct || updating) return;
+    if (keptEditImages.length + newEditImages.length === 0) {
+      setEditError("Keep or upload at least one product image.");
+      return;
+    }
     const targetCategory = categories.find(
       (category) => category.id === editForm.category_id,
     );
@@ -303,7 +349,21 @@ function ManageProducts() {
       if (targetCategory?.slug !== SPECIAL_CATEGORY_SLUG) {
         delete payload.model_group;
       }
-      const response = await API.patch(`/products/${editingProduct.id}`, payload);
+      let requestBody = payload;
+      if (
+        newEditImages.length > 0 ||
+        keptEditImages.length !== (editingProduct.images?.length ?? 0)
+      ) {
+        requestBody = new FormData();
+        Object.entries(payload).forEach(([key, value]) =>
+          requestBody.append(key, String(value)),
+        );
+        requestBody.append("keep_images", JSON.stringify(keptEditImages));
+        newEditImages.forEach((image) => requestBody.append("images", image));
+      }
+      const response = await API.patch(`/products/${editingProduct.id}`, requestBody, {
+        timeout: requestBody instanceof FormData ? 120_000 : 15_000,
+      });
       if (quickEdit && nextProduct) {
         if (nextPage !== page) setPage(nextPage);
         openEditModal(nextProduct, { clearName: true });
@@ -311,7 +371,7 @@ function ManageProducts() {
           saveNotice(response, "Product saved. Next product is ready to edit."),
         );
       } else {
-        setEditingProduct(null);
+        closeEditModal();
         setNotice(
           saveNotice(
             response,
@@ -830,7 +890,7 @@ function ManageProducts() {
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !updating) {
-              setEditingProduct(null);
+              closeEditModal();
             }
           }}
         >
@@ -855,7 +915,7 @@ function ManageProducts() {
               </div>
               <button
                 type="button"
-                onClick={() => setEditingProduct(null)}
+                onClick={closeEditModal}
                 disabled={updating}
                 aria-label="Close edit product"
                 className="p-1 text-2xl leading-none text-white/45 transition-colors hover:text-white disabled:opacity-40"
@@ -877,22 +937,75 @@ function ManageProducts() {
                 </p>
               )}
 
-              <div className="mb-5 flex items-center gap-4 border-b border-white/10 pb-5">
-                <div className="h-20 w-20 shrink-0 bg-white p-1">
-                  <img
-                    src={getOptimizedImageUrl(editingProduct.images?.[0], {
-                      width: 200,
-                      height: 200,
-                    })}
-                    alt=""
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <p className="text-xs leading-relaxed text-white/35">
-                  Product image will remain unchanged. Update the catalogue
-                  details below.
+              <fieldset className="mb-5 border-b border-white/10 pb-5">
+                <legend className="text-xs font-medium text-white/65">
+                  Product images
+                </legend>
+                <p className="mt-2 text-xs leading-relaxed text-white/40">
+                  Remove any old photo and upload its replacement. Changes appear
+                  throughout the website after saving. The first photo is the cover image.
                 </p>
-              </div>
+                <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
+                  {newEditPreviews.map((preview, index) => (
+                    <div key={preview} className="min-w-0">
+                      <div className="aspect-square bg-white p-1">
+                        <img
+                          src={preview}
+                          alt={`New product photo ${index + 1}`}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() => removeNewEditImage(index)}
+                        aria-label={`Remove new photo ${index + 1}`}
+                        className="mt-1 w-full border border-red-400/35 px-2 py-1.5 text-[11px] text-red-300 hover:bg-red-400/10 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {keptEditImages.map((image, index) => (
+                    <div key={image} className="min-w-0">
+                      <div className="aspect-square bg-white p-1">
+                        <img
+                          src={getOptimizedImageUrl(image, { width: 240, height: 240 })}
+                          alt={`Current product photo ${index + 1}`}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() =>
+                          setKeptEditImages((current) =>
+                            current.filter((url) => url !== image),
+                          )
+                        }
+                        aria-label={`Remove current photo ${index + 1}`}
+                        className="mt-1 w-full border border-red-400/35 px-2 py-1.5 text-[11px] text-red-300 hover:bg-red-400/10 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <label className="mt-4 inline-block cursor-pointer border border-gold/60 px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gold hover:bg-gold/10">
+                  Upload new photos
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleEditImageSelection}
+                    disabled={updating}
+                    className="sr-only"
+                  />
+                </label>
+                <p className="mt-2 text-[11px] text-white/35">
+                  JPEG, PNG, WebP or GIF · up to 10 photos · 5 MB each
+                </p>
+              </fieldset>
 
               <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                 <label className="block text-xs font-medium text-white/55">
@@ -1010,7 +1123,7 @@ function ManageProducts() {
                 <div className="flex items-center justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setEditingProduct(null)}
+                    onClick={closeEditModal}
                     disabled={updating}
                     className="border border-white/15 px-5 py-3 text-xs uppercase tracking-wider text-white/55 transition-colors hover:border-white/35 hover:text-white disabled:opacity-40"
                   >

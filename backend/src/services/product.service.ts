@@ -1,4 +1,5 @@
 import type { Types } from 'mongoose';
+import { MAX_PRODUCT_IMAGES } from '../config/constants.js';
 import { CategoryModel } from '../models/category.model.js';
 import { ProductModel, type Product, type ProductImage } from '../models/product.model.js';
 import { ApiError } from '../utils/api-error.js';
@@ -11,7 +12,7 @@ import type {
   ProductListRequest,
   UpdateProductRequest,
 } from '../validation/product.schemas.js';
-import { deleteProductImages } from './image.service.js';
+import { deleteProductImages, uploadProductImages } from './image.service.js';
 
 interface PopulatedCategory {
   _id: Types.ObjectId;
@@ -325,10 +326,11 @@ export async function createProduct(
 export async function updateProduct(
   id: string,
   input: UpdateProductRequest['body'],
+  files: Express.Multer.File[] = [],
 ): Promise<ProductDto> {
   const productId = toObjectId(id);
   const current = await ProductModel.findById(productId)
-    .select('name sku category modelGroup description searchTerms seoManaged slug')
+    .select('name sku category modelGroup description searchTerms seoManaged slug images')
     .lean()
     .exec();
   if (!current) throw new ApiError(404, 'PRODUCT_NOT_FOUND', 'Product not found');
@@ -386,19 +388,60 @@ export async function updateProduct(
     update.slug = updateSlug(current.slug, input.name ?? current.name, input.sku ?? current.sku);
   }
 
+  const changingImages = input.keep_images !== undefined || files.length > 0;
+  const retainedImages = changingImages
+    ? current.images.filter((image) => input.keep_images?.includes(image.url))
+    : current.images;
+  if (input.keep_images) {
+    const requested = new Set(input.keep_images);
+    if (requested.size !== input.keep_images.length || requested.size !== retainedImages.length) {
+      throw new ApiError(422, 'INVALID_PRODUCT_IMAGES', 'Selected product images are invalid');
+    }
+  }
+  if (changingImages && retainedImages.length + files.length === 0) {
+    throw new ApiError(422, 'PRODUCT_IMAGE_REQUIRED', 'Keep or upload at least one product image');
+  }
+  if (retainedImages.length + files.length > MAX_PRODUCT_IMAGES) {
+    throw new ApiError(
+      422,
+      'TOO_MANY_IMAGES',
+      `A product can have at most ${MAX_PRODUCT_IMAGES} images`,
+    );
+  }
+
+  const uploadedImages = files.length
+    ? await uploadProductImages(
+        files,
+        await getProductUploadFolder((input.category_id ?? current.category).toString()),
+      )
+    : [];
+  if (changingImages) update.images = [...uploadedImages, ...retainedImages];
+
   const updateOperation: Record<string, unknown> = { $set: update };
   if (targetCategory.slug !== 'la-aca-ra-f-models') {
     updateOperation.$unset = { modelGroup: 1 };
   }
 
-  const document = await ProductModel.findByIdAndUpdate(productId, updateOperation, {
-    new: true,
-    runValidators: true,
-  })
-    .populate('category', 'name slug')
-    .lean()
-    .exec();
-  if (!document) throw new ApiError(404, 'PRODUCT_NOT_FOUND', 'Product not found');
+  let document;
+  try {
+    document = await ProductModel.findByIdAndUpdate(productId, updateOperation, {
+      new: true,
+      runValidators: true,
+    })
+      .populate('category', 'name slug')
+      .lean()
+      .exec();
+    if (!document) throw new ApiError(404, 'PRODUCT_NOT_FOUND', 'Product not found');
+  } catch (error) {
+    await deleteProductImages(uploadedImages);
+    throw error;
+  }
+  if (changingImages) {
+    const removedImages = current.images.filter(
+      (image) => !retainedImages.some((retained) => retained.url === image.url),
+    );
+    await deleteProductImages(removedImages);
+  }
   return toProductDto(document as unknown as ProductLean);
 }
 

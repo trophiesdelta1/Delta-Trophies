@@ -52,6 +52,14 @@ export const updateProductRequestSchema = z.object({
       material: optionalText(120),
       in_stock: formBooleanSchema.optional(),
       is_active: formBooleanSchema.optional(),
+      keep_images: z.preprocess((value) => {
+        if (typeof value !== 'string') return value;
+        try {
+          return JSON.parse(value) as unknown;
+        } catch {
+          return value;
+        }
+      }, z.array(z.url()).max(10).optional()),
     })
     .refine((value) => Object.values(value).some((field) => field !== undefined), {
       message: 'At least one field is required',
